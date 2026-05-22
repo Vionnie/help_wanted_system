@@ -181,8 +181,60 @@
   </main>
 
   <script>
+    // --- Google Sheets Configuration ---
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjG54xRoOI26TUNmrjEafGm24qVWlsukksxN62fkPTjHSvOM78R3cAeX5Vy4x75oJ4xg/exec";
+
     // State Tracker
     let currentFilter = 'All';
+
+    // --- Backend API Sync Integration ---
+
+    /**
+     * Submit payloads (create / update) to Google Sheet Web App
+     */
+    async function syncToSheet(payload) {
+      try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!result.ok) {
+          console.warn("Sheet sync error:", result.error);
+        }
+        return result;
+      } catch (err) {
+        console.error("Failed to sync directly to Google Sheets:", err);
+      }
+    }
+
+    /**
+     * Fetch raw records array from Google Sheets
+     */
+    async function fetchRecordsFromSheet() {
+      const response = await fetch(APPS_SCRIPT_URL);
+      if (!response.ok) throw new Error("Google Sheets Network response was not ok");
+      const data = await response.json();
+      if (!data.ok) throw new Error(data.error || "Unknown Apps Script Error");
+      return (data.records || []).map(normalizeRecord);
+    }
+
+    /**
+     * Normalize Sheet header values back into frontend camelCase keys
+     */
+    function normalizeRecord(record) {
+      return {
+        id: record["Task ID"] !== undefined ? record["Task ID"] : (record["id"] || ""),
+        createdAt: record["Created At"] !== undefined ? record["Created At"] : (record["createdAt"] || ""),
+        title: record["Help Requested"] !== undefined ? record["Help Requested"] : (record["title"] || ""),
+        category: record["Task Category"] !== undefined ? record["Task Category"] : (record["category"] || ""),
+        time: record["Execution Time"] !== undefined ? record["Execution Time"] : (record["time"] || ""),
+        location: record["Task Location"] !== undefined ? record["Task Location"] : (record["location"] || ""),
+        status: record["Current Status"] !== undefined ? record["Current Status"] : (record["status"] || ""),
+        comment: record["Execution Comment"] !== undefined ? record["Execution Comment"] : (record["comment"] || "")
+      };
+    }
 
     // --- Core JavaScript Implementation ---
 
@@ -408,10 +460,26 @@
     // --- Helper & Orchestration Logic ---
 
     /**
-     * Reads state from local storage, filters, sorts and orders them by time, earliest at top.
+     * Reads state from Google Sheet, filters, sorts and orders them by time.
+     * Gracefully falls back to local storage cache if there is no network connection.
      */
-    function processAndRender() {
-      const allRecords = loadData();
+    async function processAndRender(forceLocal = false) {
+      let allRecords = [];
+      
+      if (!forceLocal) {
+        try {
+          // Attempt loading from Google Sheet
+          allRecords = await fetchRecordsFromSheet();
+          // Update offline local storage copy to sync
+          localStorage.setItem('records', JSON.stringify(allRecords));
+        } catch (e) {
+          console.warn("Google Sheet sync failed. Loading fallback offline records.", e);
+          allRecords = loadData();
+          showToast('⚠️ Sheet offline. Loaded offline copy.');
+        }
+      } else {
+        allRecords = loadData();
+      }
       
       // Sort: earliest date first (ascending order)
       const sortedRecords = allRecords.sort((a, b) => new Date(a.time) - new Date(b.time));
@@ -428,7 +496,7 @@
     /**
      * Submit event handler to submit new job gig requests
      */
-    document.getElementById('gigForm').addEventListener('submit', function (e) {
+    document.getElementById('gigForm').addEventListener('submit', async function (e) {
       e.preventDefault();
 
       const titleInput = document.getElementById('title');
@@ -444,6 +512,8 @@
       };
 
       const record = createRecord(formData);
+      
+      // Save locally first to guarantee zero-loss if connection drops
       saveData(record);
 
       // UI Polish reset
@@ -452,44 +522,63 @@
       timeInput.value = '';
       locationInput.value = '';
 
-      processAndRender();
+      showToast('⏳ Syncing to Google Sheets...');
+      // Sync live row creation to Google Sheet
+      await syncToSheet({ action: "create", record });
+
+      await processAndRender();
       showToast('🎉 Gig successfully posted!');
     });
 
     /**
      * Toggle event handles status transitions between 'Not finished', 'Pending', and 'Completed'
      */
-    function handleStatusToggle(id, newStatus) {
+    async function handleStatusToggle(id, newStatus) {
+      // Local changes saved
       updateRecord(id, { status: newStatus });
-      processAndRender();
+      
+      showToast('⏳ Syncing status...');
+      // Sheet modifications saved
+      await syncToSheet({ action: "update", id, changes: { status: newStatus } });
+      
+      await processAndRender();
       showToast(`Status updated to: ${newStatus}`);
     }
 
     /**
      * Save the comment submitted on a record
      */
-    function saveFeedbackComment(id) {
+    async function saveFeedbackComment(id) {
       const input = document.getElementById(`comment-input-${id}`);
       if (input) {
-        updateRecord(id, { comment: input.value.trim() });
-        processAndRender();
+        const commentValue = input.value.trim();
+        // Local update saved
+        updateRecord(id, { comment: commentValue });
+        
+        showToast('⏳ Saving comment...');
+        // Sync comment modification to Google Sheet
+        await syncToSheet({ action: "update", id, changes: { comment: commentValue } });
+        
+        await processAndRender();
         showToast('📝 Helper note saved!');
       }
     }
 
     /**
-     * Delete record entirely from system
+     * Delete record entirely from local storage cache
      */
     function handleDelete(id) {
       const records = loadData();
       const filtered = records.filter(r => r.id !== id);
       localStorage.setItem('records', JSON.stringify(filtered));
-      processAndRender();
+      
+      // Trigger rendering with fallback cache to prevent Sheet refetching it immediately
+      processAndRender(true);
       showToast('🗑️ Gig request removed.');
     }
 
     /**
-     * Applies selection class to filter buttons and runs the filter algorithm
+     * Applies selection class to filter tabs and runs the filter algorithm
      */
     function applyFilter(filterMode) {
       currentFilter = filterMode;
