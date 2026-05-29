@@ -97,6 +97,17 @@
             </select>
           </div>
 
+          <!-- Urgency Input -->
+          <div>
+            <label for="urgency" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Urgency Level *</label>
+            <select id="urgency" required 
+              class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:bg-white transition-all text-sm font-medium text-slate-600">
+              <option value="Medium" selected>⚠️ Medium Urgency</option>
+              <option value="High">🚨 High Urgency</option>
+              <option value="Low">🌱 Low Urgency</option>
+            </select>
+          </div>
+
           <!-- Time Input Field (Full width) -->
           <div>
             <label for="time" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">When do you need it? *</label>
@@ -124,43 +135,68 @@
     <section class="lg:col-span-7 flex flex-col gap-6">
       
       <!-- Stats / Filter Section -->
-      <div class="bg-white rounded-3xl shadow-xl p-5 border border-pink-100/50 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="bg-white rounded-3xl shadow-xl p-5 border border-pink-100/50 flex flex-col gap-4">
         
-        <!-- Filter Tabs -->
-        <div class="flex flex-wrap gap-2 p-1 bg-slate-100 rounded-2xl w-full md:w-auto">
-          <button onclick="applyFilter('All')" id="filter-All" 
-            class="filter-tab flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 bg-white shadow-sm text-slate-800">
-            All
-          </button>
-          <button onclick="applyFilter('Not finished')" id="filter-Not finished" 
-            class="filter-tab flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-slate-800">
-            Not Finished
-          </button>
-          <button onclick="applyFilter('Pending')" id="filter-Pending" 
-            class="filter-tab flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-slate-800">
-            Pending
-          </button>
-          <button onclick="applyFilter('Completed')" id="filter-Completed" 
-            class="filter-tab flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-slate-800">
-            Completed
-          </button>
+        <!-- Row 1: Status Filters & Counters -->
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+          <!-- Status Filter Tabs -->
+          <div class="flex flex-wrap gap-2 p-1 bg-slate-100 rounded-2xl w-full md:w-auto">
+            <button onclick="applyFilter('All')" id="filter-All" 
+              class="filter-tab flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 bg-white shadow-sm text-slate-800">
+              All
+            </button>
+            <button onclick="applyFilter('Not finished')" id="filter-Not finished" 
+              class="filter-tab flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-slate-800">
+              Not Finished
+            </button>
+            <button onclick="applyFilter('Pending')" id="filter-Pending" 
+              class="filter-tab flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-slate-800">
+              Pending
+            </button>
+            <button onclick="applyFilter('Completed')" id="filter-Completed" 
+              class="filter-tab flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-slate-800">
+              Completed
+            </button>
+          </div>
+
+          <!-- Mini Stats Counter -->
+          <div class="flex gap-4 text-xs font-bold text-slate-500 w-full md:w-auto justify-around sm:justify-end">
+            <div class="text-center md:text-right">
+              <span class="text-rose-500 block text-lg font-extrabold leading-none" id="activeCount">0</span>
+              <span>active</span>
+            </div>
+            <div class="h-8 w-[1px] bg-slate-200"></div>
+            <div class="text-center md:text-right">
+              <span class="text-indigo-500 block text-lg font-extrabold leading-none" id="pendingCount">0</span>
+              <span>pending</span>
+            </div>
+            <div class="h-8 w-[1px] bg-slate-200"></div>
+            <div class="text-center md:text-right">
+              <span class="text-emerald-500 block text-lg font-extrabold leading-none" id="completedCount">0</span>
+              <span>completed</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Mini Stats Counter -->
-        <div class="flex gap-4 text-xs font-bold text-slate-500 w-full md:w-auto justify-around sm:justify-end">
-          <div class="text-center md:text-right">
-            <span class="text-rose-500 block text-lg font-extrabold leading-none" id="activeCount">0</span>
-            <span>active</span>
+        <!-- Row 2: Search Input & Category Filter -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 border-t border-slate-100 pt-3">
+          <!-- Text Search input -->
+          <div class="md:col-span-7 relative">
+            <input type="text" id="searchInput" oninput="triggerSearchFilter()" placeholder="🔍 Search gigs by title, location..." 
+              class="w-full px-4 py-2 text-xs font-semibold rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all text-slate-700">
           </div>
-          <div class="h-8 w-[1px] bg-slate-200"></div>
-          <div class="text-center md:text-right">
-            <span class="text-indigo-500 block text-lg font-extrabold leading-none" id="pendingCount">0</span>
-            <span>pending</span>
-          </div>
-          <div class="h-8 w-[1px] bg-slate-200"></div>
-          <div class="text-center md:text-right">
-            <span class="text-emerald-500 block text-lg font-extrabold leading-none" id="completedCount">0</span>
-            <span>completed</span>
+          <!-- Category Selector Dropdown -->
+          <div class="md:col-span-5">
+            <select id="categoryFilter" onchange="triggerCategoryFilter()" 
+              class="w-full px-3 py-2 text-xs font-semibold rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all text-slate-600">
+              <option value="All">📁 All Categories</option>
+              <option value="Academics &amp; Study">📚 Academics &amp; Study</option>
+              <option value="Moving &amp; Heavy Lifting">📦 Moving &amp; Heavy Lifting</option>
+              <option value="Food &amp; Deliveries">🍕 Food &amp; Deliveries</option>
+              <option value="Tech Support">💻 Tech Support</option>
+              <option value="Event Help">🎉 Event Help</option>
+              <option value="Other">✨ Other</option>
+            </select>
           </div>
         </div>
 
@@ -186,6 +222,8 @@
 
     // State Tracker
     let currentFilter = 'All';
+    let currentCategoryFilter = 'All';
+    let currentSearchQuery = '';
 
     // --- Backend API Sync Integration ---
 
@@ -228,6 +266,7 @@
         id: record["Task ID"] !== undefined ? record["Task ID"] : (record["id"] || ""),
         createdAt: record["Created At"] !== undefined ? record["Created At"] : (record["createdAt"] || ""),
         title: record["Help Requested"] !== undefined ? record["Help Requested"] : (record["title"] || ""),
+        urgency: record["Urgency"] !== undefined ? record["Urgency"] : (record["urgency"] || "Medium"),
         category: record["Task Category"] !== undefined ? record["Task Category"] : (record["category"] || ""),
         time: record["Execution Time"] !== undefined ? record["Execution Time"] : (record["time"] || ""),
         location: record["Task Location"] !== undefined ? record["Task Location"] : (record["location"] || ""),
@@ -247,7 +286,8 @@
       return {
         id: typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
         createdAt: new Date().toISOString(),
-        title: formData.title.trim(),
+        title: formData.title.trim(), // Stored cleanly: no appended meta bracket strings!
+        urgency: formData.urgency || "Medium",
         category: formData.category,
         time: formData.time,
         location: formData.location.trim(),
@@ -273,7 +313,8 @@
     function loadData() {
       try {
         const stored = localStorage.getItem('records');
-        return stored ? JSON.parse(stored) : [];
+        const parsed = stored ? JSON.parse(stored) : [];
+        return parsed.map(normalizeRecord);
       } catch (e) {
         console.error("Error reading localStorage", e);
         return [];
@@ -298,6 +339,7 @@
 
     /**
      * Render the given records onto the page.
+     * Displays a customized visual indicator based on Urgency parameters.
      * @param {Array} recordsToShow 
      */
     function renderList(recordsToShow) {
@@ -310,9 +352,9 @@
         listContainer.innerHTML = `
           <div class="bg-white rounded-3xl p-12 text-center border border-pink-100/30 shadow-md">
             <span class="text-5xl block mb-4">🎈</span>
-            <h3 class="text-lg font-bold text-slate-700">No gigs to show</h3>
+            <h3 class="text-lg font-bold text-slate-700">No matching gigs found</h3>
             <p class="text-sm text-slate-400 mt-1 max-w-sm mx-auto">
-              ${currentFilter === 'All' ? 'No one has posted yet! Be the first to ask for help.' : `No gigs currently fit the "${currentFilter}" filter.`}
+              Try adjusting your text search, category filters, or task status selections.
             </p>
           </div>
         `;
@@ -362,6 +404,16 @@
           `;
         }
 
+        // Urgency pill styling
+        let urgencyBadge = '';
+        if (gig.urgency === 'High') {
+          urgencyBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">🚨 High</span>`;
+        } else if (gig.urgency === 'Low') {
+          urgencyBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">🌱 Low</span>`;
+        } else {
+          urgencyBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">⚠️ Medium</span>`;
+        }
+
         return `
           <div class="relative bg-white rounded-3xl p-6 border shadow-md hover:shadow-lg transition-all duration-300 ${cardBgClass}">
             
@@ -374,6 +426,7 @@
                     ${gig.category}
                   </span>
                   ${statusBadge}
+                  ${urgencyBadge}
                 </div>
 
                 <!-- Gig Title -->
@@ -460,8 +513,8 @@
     // --- Helper & Orchestration Logic ---
 
     /**
-     * Reads state from Google Sheet, filters, sorts and orders them by time.
-     * Gracefully falls back to local storage cache if there is no network connection.
+     * Reads state from Google Sheet, applies text filters, double filters, and sorts.
+     * Graces dual-tier sorting: closest date first, then highest urgency first.
      */
     async function processAndRender(forceLocal = false) {
       let allRecords = [];
@@ -481,16 +534,60 @@
         allRecords = loadData();
       }
       
-      // Sort: earliest date first (ascending order)
-      const sortedRecords = allRecords.sort((a, b) => new Date(a.time) - new Date(b.time));
+      // --- Sorting: from closest date to farthest date AND THEN from Most urgent to least urgent ---
+      const sortedRecords = allRecords.sort((a, b) => {
+        const dateDiff = new Date(a.time) - new Date(b.time);
+        if (dateDiff !== 0) {
+          return dateDiff; // Closest date to farthest date
+        }
+        
+        // Equal dates: Sort by Urgency (Most urgent to least urgent)
+        const urgencyWeight = { 'High': 3, 'Medium': 2, 'Low': 1 };
+        const weightA = urgencyWeight[a.urgency] || 2;
+        const weightB = urgencyWeight[b.urgency] || 2;
+        return weightB - weightA; // High -> Medium -> Low
+      });
 
-      // Filter
+      // --- Multi-tier Filtering (Status, Category, Text Query) ---
       let filtered = sortedRecords;
+      
+      // 1. Status Filter
       if (currentFilter !== 'All') {
-        filtered = sortedRecords.filter(r => r.status === currentFilter);
+        filtered = filtered.filter(r => r.status === currentFilter);
+      }
+
+      // 2. Category Filter
+      if (currentCategoryFilter !== 'All') {
+        filtered = filtered.filter(r => r.category === currentCategoryFilter);
+      }
+
+      // 3. Search Bar Query
+      if (currentSearchQuery.trim() !== '') {
+        const query = currentSearchQuery.toLowerCase().trim();
+        filtered = filtered.filter(r => 
+          r.title.toLowerCase().includes(query) || 
+          r.location.toLowerCase().includes(query) ||
+          r.comment.toLowerCase().includes(query)
+        );
       }
 
       renderList(filtered);
+    }
+
+    /**
+     * Submits a text search query in real-time
+     */
+    function triggerSearchFilter() {
+      currentSearchQuery = document.getElementById('searchInput').value;
+      processAndRender(true); // Filter loaded data instantly for high performance
+    }
+
+    /**
+     * Submits a category filter change
+     */
+    function triggerCategoryFilter() {
+      currentCategoryFilter = document.getElementById('categoryFilter').value;
+      processAndRender(true); // Filter loaded data instantly for high performance
     }
 
     /**
@@ -501,12 +598,14 @@
 
       const titleInput = document.getElementById('title');
       const categoryInput = document.getElementById('category');
+      const urgencyInput = document.getElementById('urgency');
       const timeInput = document.getElementById('time');
       const locationInput = document.getElementById('location');
 
       const formData = {
         title: titleInput.value,
         category: categoryInput.value,
+        urgency: urgencyInput.value,
         time: timeInput.value,
         location: locationInput.value
       };
@@ -519,6 +618,7 @@
       // UI Polish reset
       titleInput.value = '';
       categoryInput.selectedIndex = 0;
+      urgencyInput.value = 'Medium';
       timeInput.value = '';
       locationInput.value = '';
 
